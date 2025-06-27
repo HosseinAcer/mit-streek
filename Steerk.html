@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MIT STREEK 🔥</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            transition: background 0.5s, color 0.5s;
+            user-select: none;
+        }
+
+        :root {
+            --bg-light: #f0f0f0;
+            --text-light: #222;
+            --bg-dark: #121212;
+            --text-dark: #eee;
+            --green: #4caf50;
+            --green-dark: #388e3c;
+            --gold: #ffca28;
+            --red: #ef5350;
+        }
+
+        body.light {
+            --bg: var(--bg-light);
+            --text: var(--text-light);
+        }
+
+        body.dark {
+            --bg: var(--bg-dark);
+            --text: var(--text-dark);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: var(--green);
+            text-shadow: 0 0 8px var(--green);
+        }
+
+        #streak {
+            font-size: 6rem;
+            font-weight: 900;
+            margin: 0.5rem 0 1rem 0;
+            letter-spacing: 0.15em;
+            color: var(--green);
+            text-shadow: 0 0 10px var(--green);
+        }
+
+        #message {
+            font-size: 1.3rem;
+            height: 1.5rem;
+            margin-bottom: 1.8rem;
+            color: var(--gold);
+            font-weight: 600;
+            min-height: 1.5rem;
+        }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 3rem;
+            margin: 0.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            background: var(--green);
+            box-shadow: 0 6px 10px rgba(76, 175, 80, 0.6);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: var(--green-dark);
+            box-shadow: 0 8px 14px rgba(56, 142, 60, 0.8);
+        }
+
+        .btn.red {
+            background: var(--red);
+            box-shadow: 0 6px 10px rgba(239, 83, 80, 0.6);
+        }
+
+        .btn.red:hover {
+            background: #c62828;
+            box-shadow: 0 8px 14px rgba(198, 40, 40, 0.8);
+        }
+
+        #badge {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            color: var(--gold);
+            text-shadow: 0 0 6px var(--gold);
+            min-height: 2rem;
+        }
+
+        #themeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: 2px solid var(--green);
+            padding: 0.3rem 0.8rem;
+            color: var(--green);
+            font-weight: 700;
+            border-radius: 8px;
+            user-select: none;
+            transition: all 0.4s ease;
+        }
+
+        #themeToggle:hover {
+            background: var(--green);
+            color: #121212;
+            border-color: var(--green-dark);
+        }
+
+        #shareBtn {
+            background: #1da1f2;
+            box-shadow: 0 6px 10px rgba(29, 161, 242, 0.6);
+        }
+
+        #shareBtn:hover {
+            background: #0d95e8;
+            box-shadow: 0 8px 14px rgba(13, 149, 232, 0.8);
+        }
+
+        footer {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: var(--text);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body class="dark">
+
+    <button id="themeToggle" aria-label="Toggle Light/Dark Mode">LIGHT MODE</button>
+
+    <h1>MIT STREEK 🔥</h1>
+    <div>YOUR CURRENT STREAK:</div>
+    <div id="streak">0</div>
+    <div id="message"></div>
+
+    <button id="streakButton" class="btn">INCREASE STREAK</button>
+    <button id="resetButton" class="btn red">RESET STREAK</button>
+    <button id="shareBtn" class="btn">SHARE STREAK</button>
+
+    <div id="badge"></div>
+
+    <footer>Made by ChatGPT for the MIT STREEK legend 💥</footer>
+
+    <audio id="clickSound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3" preload="auto"></audio>
+
+    <script>
+        const streakDisplay = document.getElementById('streak');
+        const button = document.getElementById('streakButton');
+        const resetBtn = document.getElementById('resetButton');
+        const message = document.getElementById('message');
+        const badge = document.getElementById('badge');
+        const shareBtn = document.getElementById('shareBtn');
+        const clickSound = document.getElementById('clickSound');
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Load streak and last date from localStorage
+        let streak = Number(localStorage.getItem('mitStreak')) || 0;
+        let lastDate = localStorage.getItem('mitStreakDate');
+        let theme = localStorage.getItem('mitTheme') || 'dark';
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0]; // yyyy-mm-dd
+        }
+
+        // Reset streak if lastDate is not yesterday or today
+        function checkReset() {
+            if (!lastDate) return;
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+
+            const last = new Date(lastDate);
+            const lastStr = formatDate(last);
+            const todayStr = formatDate(today);
+            const yesterdayStr = formatDate(yesterday);
+
+            if (lastStr !== todayStr && lastStr !== yesterdayStr) {
+                streak = 0;
+                localStorage.setItem('mitStreak', streak);
+                message.textContent = 'STREAK RESET - YOU MISSED A DAY!';
+                updateBadge();
+                updateDisplay();
+            }
+        }
+
+        // Update streak number on page
+        function updateDisplay() {
+            streakDisplay.textContent = streak;
+        }
+
+        // Update badge based on streak milestones
+        function updateBadge() {
+            if (streak >= 30) {
+                badge.textContent = '🏆 LEGENDARY STREAK (30+ DAYS)!';
+            } else if (streak >= 15) {
+                badge.textContent = '🔥 EPIC STREAK (15 DAYS)!';
+            } else if (streak >= 7) {
+                badge.textContent = '💪 STRONG STREAK (7 DAYS)!';
+            } else if (streak >= 3) {
+                badge.textContent = '⚡ GETTING STARTED (3 DAYS)!';
+            } else if (streak > 0) {
+                badge.textContent = '';
+            } else {
+                badge.textContent = '';
+            }
+        }
+
+        // Check if user already clicked today
+        function canIncrease() {
+            if (!lastDate) return true;
+            const todayStr = formatDate(new Date());
+            return lastDate !== todayStr;
+        }
+
+        // Handle streak button click
+        button.addEventListener('click', () => {
+            if (!canIncrease()) {
+                message.textContent = 'YOU ALREADY INCREASED TODAY! COME BACK TOMORROW!';
+                return;
+            }
+            streak++;
+            const todayStr = formatDate(new Date());
+            localStorage.setItem('mitStreak', streak);
+            localStorage.setItem('mitStreakDate', todayStr);
+            lastDate = todayStr;
+            updateDisplay();
+            updateBadge();
+            message.textContent = '🔥 AWESOME! STREAK INCREASED!';
+            clickSound.currentTime = 0;
+            clickSound.play();
+            requestNotificationPermission();
+        });
+
+        // Reset button handler
+        resetBtn.addEventListener('click', () => {
+            if (confirm('ARE YOU SURE YOU WANT TO RESET YOUR STREAK?')) {
+                streak = 0;
+                localStorage.setItem('mitStreak', streak);
+                localStorage.removeItem('mitStreakDate');
+                lastDate = null;
+                updateDisplay();
+                updateBadge();
+                message.textContent = 'STREAK RESET.';
+            }
+        });
+
+        // Share button handler
+        shareBtn.addEventListener('click', () => {
+            const shareText = `MY MIT STREEK IS ${streak} DAYS 🔥🔥🔥\nCan you beat me? #MITStreek`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'MIT STREEK',
+                    text: shareText,
+                    url: window.location.href,
+                }).catch(() => {
+                    alert('Sharing cancelled or not supported.');
+                });
+            } else {
+                // fallback: copy to clipboard
+                navigator.clipboard.writeText(shareText)
+                    .then(() => alert('Streak copied to clipboard! Share it anywhere!'))
+                    .catch(() => alert('Failed to copy to clipboard.'));
+            }
+        });
+
+        // Theme toggle button
+        function updateTheme() {
+            if (theme === 'dark') {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeToggle.textContent = 'LIGHT MODE';
+                themeToggle.style.color = 'var(--green)';
+                themeToggle.style.borderColor = 'var(--green)';
+            } else {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeToggle.textContent = 'DARK MODE';
+                themeToggle.style.color = 'var(--text-light)';
+                themeToggle.style.borderColor = 'var(--text-light)';
+            }
+            localStorage.setItem('mitTheme', theme);
+        }
+        themeToggle.addEventListener('click', () => {
+            theme = theme === 'dark' ? 'light' : 'dark';
+            updateTheme();
+        });
+
+        // Web Notifications - remind user daily (simple example)
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === "granted") {
+                scheduleNotification();
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") scheduleNotification();
+                });
+            }
+        }
+
+        function scheduleNotification() {
+            // Basic example: remind after 24 hours - note: service workers needed for real push notifications
+            setTimeout(() => {
+                new Notification("MIT STREEK REMINDER 🔥", {
+                    body: "Don't forget to increase your streak today!",
+                    icon: "https://cdn-icons-png.flaticon.com/512/1828/1828805.png"
+                });
+            }, 24 * 60 * 60 * 1000); // 24 hours
+        }
+
+        // INITIAL SETUP
+        updateTheme();
+        checkReset();
+        updateDisplay();
+        updateBadge();
+
+    </script>
+</body>
+
+</html>
